@@ -58,6 +58,7 @@
         //
         $(function () {
             bindClickBtnSms();
+            bindClickSubmit();
         });
 
         /*
@@ -97,6 +98,30 @@
                     $smsBtn.val('点击获取验证码').prop('disabled', false);
                 }
             }, 1000)
+        }
+
+        /*  点击注册 */
+        function bindClickSubmit() {
+            $('#btnSubmit').click(function () {
+                $('.error-msg').empty();
+                $.ajax({
+                    url: "{% url 'app01:register' %}",
+                    type: "POST",
+                    data: $('#regForm').serialize(),
+                    dataType: "JSON",
+                    success: function (res) {
+                        if (res.status) {
+                            location.href = res.data;
+                        } else {
+                            $.each(res.error, function (key, value) {
+                                $("#id_" + key).next().text(value[0]);
+                            })
+                        }
+                    }
+                })
+
+            })
+
         }
     </script>
 {% endblock %}
