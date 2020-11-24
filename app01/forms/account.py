@@ -7,9 +7,10 @@ import random
 from utils.tencent.sms import send_sms_single
 from utils.encrypt import md5
 from django_redis import get_redis_connection
+from app01.forms.bootstrap import BootStrapForm
 
 
-class RegisterModelForm(forms.ModelForm):
+class RegisterModelForm(BootStrapForm, forms.ModelForm):
 
     password = forms.CharField(
         label='密码',
@@ -37,12 +38,6 @@ class RegisterModelForm(forms.ModelForm):
     code = forms.CharField(
         label='验证码',
         widget=forms.TextInput())
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-            field.widget.attrs['placeholder'] = '请输入{}'.format(field.label)
 
     def clean_username(self):
         username = self.cleaned_data['username']
@@ -103,6 +98,7 @@ class RegisterModelForm(forms.ModelForm):
         model = models.UserInfo
         fields = ['username', 'email', 'password', 'confirm_password', 'mobile_phone', 'code']
 
+
 class SendSmsForm(forms.Form):
     mobile_phone = forms.CharField(
         label='手机号', validators=[RegexValidator(r'^1[3|4|5|6|7|8|9]\d{9}$', '手机格式错误'), ]
@@ -120,8 +116,12 @@ class SendSmsForm(forms.Form):
             raise ValidationError('短信模板错误')
 
         exists = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
-        if exists:
-            raise ValidationError('手机号已存在')
+        if tpl == 'login':
+            if not exists:
+                raise ValidationError('手机号不存在')
+        else:
+            if exists:
+                raise ValidationError('手机号已存在')
 
         code = random.randrange(1000, 9999)
         sms = send_sms_single(mobile_phone, template_id, [code, ])
@@ -132,3 +132,38 @@ class SendSmsForm(forms.Form):
         conn = get_redis_connection()
         conn.set(mobile_phone, code, ex=60)
         return mobile_phone
+
+
+class LoginSMSForm(BootStrapForm, forms.Form):
+    mobile_phone = forms.CharField(
+        label='手机号', validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机号格式错误'), ])
+    code = forms.CharField(
+        label='验证码',
+        widget=forms.TextInput())
+
+    def clean_mobile_phone(self):
+        mobile_phone = self.cleaned_data['mobile_phone']
+        exists = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
+        if not exists:
+            raise ValidationError('手机号未注册')
+        return mobile_phone
+
+    def clean_code(self):
+        code = self.cleaned_data['code']
+
+        # mobile_phone = self.cleaned_data['mobile_phone']
+        mobile_phone = self.cleaned_data.get('mobile_phone')
+        if not mobile_phone:
+            return code
+
+        conn = get_redis_connection()
+        redis_code = conn.get(mobile_phone)
+        if not redis_code:
+            raise ValidationError('验证码失效或未发送，请重新发送')
+
+        redis_str_code = redis_code.decode('utf-8')
+
+        if code.strip() != redis_str_code:
+            raise ValidationError('验证码错误，请重新输入')
+
+        return code

@@ -1,6 +1,6 @@
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
-from app01.forms.account import RegisterModelForm, SendSmsForm
+from app01.forms.account import RegisterModelForm, SendSmsForm, LoginSMSForm
 
 # Create your views here.
 
@@ -21,3 +21,14 @@ def register(request):
         form.save()
         return JsonResponse({'status': True, 'data': '/login/'})
     return JsonResponse({'status': False, 'error': form.errors})
+
+
+def login(request):
+    if request.method == 'GET':
+        form = LoginSMSForm()
+        return render(request, 'login.html', {'form':form})
+    form = LoginSMSForm(request.POST)
+    if form.is_valid():
+        return JsonResponse({'status': True, 'data':'/index/'})
+    else:
+        return JsonResponse({'status': False, 'error': form.errors})
