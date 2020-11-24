@@ -10,19 +10,18 @@ from django_redis import get_redis_connection
 
 
 class RegisterModelForm(forms.ModelForm):
-    mobile_phone = forms.CharField(
-        label='手机号',validators=[(r'^1[3|4|5|6|7|8|9]\d{9}$', '手机格式错误'), ]
-    )
+
     password = forms.CharField(
         label='密码',
         min_length=8,
         max_length=64,
         error_messages={
             'min_length': "密码长度不能小于8个字符",
-            'max_length': "密码长度不能小于8个字符"
+            'max_length': "密码长度不能大于64个字符"
         },
         widget=forms.PasswordInput()
     )
+
     confirm_password = forms.CharField(
         label='重复密码',
         min_length=8,
@@ -31,16 +30,13 @@ class RegisterModelForm(forms.ModelForm):
             'min_length': "重复密码长度不能小于8个字符",
             'max_length': "重复密码长度不能大于64个字符"
         },
-        widget=forms.PasswordInput()
-    )
+        widget=forms.PasswordInput())
+
+    mobile_phone = forms.CharField(label='手机号', validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机号格式错误'), ])
+
     code = forms.CharField(
         label='验证码',
-        widget=forms.TextInput()
-    )
-
-    class Meta:
-        model = models.UserInfo
-        fields = ['username', 'email', 'password', 'confirm_password', 'mobile_phone', 'code']
+        widget=forms.TextInput())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,10 +99,13 @@ class RegisterModelForm(forms.ModelForm):
 
         return code
 
+    class Meta:
+        model = models.UserInfo
+        fields = ['username', 'email', 'password', 'confirm_password', 'mobile_phone', 'code']
 
 class SendSmsForm(forms.Form):
     mobile_phone = forms.CharField(
-        label='手机号',validators=[RegexValidator(r'^1[3|4|5|6|7|8|9]\d{9}$', '手机格式错误'), ]
+        label='手机号', validators=[RegexValidator(r'^1[3|4|5|6|7|8|9]\d{9}$', '手机格式错误'), ]
     )
 
     def __init__(self, request, *args, **kwargs):
@@ -120,7 +119,7 @@ class SendSmsForm(forms.Form):
         if not template_id:
             raise ValidationError('短信模板错误')
 
-        exists = models.UserInfo.objects.filter(models_phone=mobile_phone).exists()
+        exists = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
         if exists:
             raise ValidationError('手机号已存在')
 
