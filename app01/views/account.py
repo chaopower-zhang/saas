@@ -1,7 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
 from app01.forms.account import RegisterModelForm, SendSmsForm, LoginSMSForm
-
+from django.urls import reverse
 # Create your views here.
 
 
@@ -19,7 +19,7 @@ def register(request):
     form = RegisterModelForm(data=request.POST)
     if form.is_valid():
         form.save()
-        return JsonResponse({'status': True, 'data': '/login/'})
+        return JsonResponse({'status': True, 'data': reverse('app01:login')})
     return JsonResponse({'status': False, 'error': form.errors})
 
 
