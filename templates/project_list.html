@@ -3,7 +3,7 @@
 
 {% block css %}
     <style>
-        .project{
+        .project {
             margin-top: 35px;
         }
     </style>
@@ -12,6 +12,35 @@
 
 {% block content %}
     <div class="container-fluid project">
-        <a href="" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"> 新建项目</i></a>
+        <a href="" class="btn btn-success" data-toggle="modal" data-target="#addModal">
+            <i class="fa fa-plus" aria-hidden="true"> 新建项目</i>
+        </a>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm">
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field }}
+                                <span class="error-msg"></span>
+                            </div>
+                        {% endfor %}
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
