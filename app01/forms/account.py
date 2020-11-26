@@ -170,7 +170,7 @@ class LoginSMSForm(BootStrapForm, forms.Form):
 
 
 class LoginForm(BootStrapForm, forms.Form):
-    usename = forms.CharField(label='用户名或邮箱')
+    username = forms.CharField(label='用户名或邮箱')
     password = forms.CharField(label='密码', widget=forms.PasswordInput())
     code = forms.CharField(label='图片验证码', widget=forms.TextInput())
 

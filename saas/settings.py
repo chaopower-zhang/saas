@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app01.middleware.auth.AuthMiddleware',
 ]
 
 ROOT_URLCONF = 'saas.urls'
@@ -130,6 +131,14 @@ TENCENT_SMS_TEMPLATE = {
     'register': 758311,
     'login': 782936
 }
+
+WHITE_REGEX_URL_LIST = [
+    "/app01/register/",
+    "/app01/login-sms/",
+    "/app01/login/",
+    "/app01/image-code/",
+    "/app01/send-sms/",
+]
 
 try:
     from .local_setting import *
