@@ -43,4 +43,34 @@
             </div>
         </div>
     </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+    $(function () {
+        bindSubmit();
+    });
+    function bindSubmit() {
+        $('#btnSubmit').click(function () {
+            $.ajax({
+                url:"{% url 'app01:project_list' %}",
+                type:"POST",
+                data:$('#addModal').serialize(),
+                dataType:"JSON",
+                success:function (res) {
+                    if (res.status) {
+                            location.reload();
+                        } else {
+                            $.each(res.error, function (key, value) {
+                                $("#id_" + key).next().text(value[0])
+                            })
+                        }
+
+                }
+
+            })
+        })
+    }
+    </script>
 {% endblock %}
