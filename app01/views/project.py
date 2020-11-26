@@ -13,6 +13,7 @@ def project_list(request):
 
     form = ProjectModelForm(request, data=request.POST)
     if form.is_valid():
-        form.instance.creator = request.trace.user
-
+        form.instance.creator = request.tracer.user
+        form.save()
+        return JsonResponse({'status': True})
     return JsonResponse({'status':False, 'error':form.errors})
