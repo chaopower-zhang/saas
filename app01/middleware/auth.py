@@ -6,6 +6,7 @@ from app01 import models
 from django.shortcuts import redirect
 from django.conf import settings
 import datetime
+from django.core.urlresolvers import resolve
 
 
 # 封装处理
@@ -63,3 +64,21 @@ class AuthMiddleware(MiddlewareMixin):
             else:
                 request.tracer.price_policy = _object.price_policy
         """
+
+    def process_view(self, request, view, args, kwargs):
+        if not request.path_info.startswith('/app01/manage/'):
+            return
+
+        project_id = kwargs.get('project_id')
+        project_object = models.Project.objects.filter(creator=request.tracer.user, id=project_id).first()
+        if project_object:
+            request.tracer.project = project_object
+            return
+
+        project_user_object = models.ProjectUser.objects.filter(user=request.tracer.user, project_id=project_id).first()
+        if project_user_object:
+            # 是我参与的项目
+            request.tracer.project = project_user_object.project
+            return
+
+        return redirect('app01:project_list')

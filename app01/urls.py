@@ -1,5 +1,6 @@
 from django.conf.urls import url, include
 from app01.views import account, project
+from app01 import menu
 
 urlpatterns = [
     url(r'^register/$', account.register, name='register'),
@@ -13,4 +14,7 @@ urlpatterns = [
     url(r'^project/list/$', project.project_list, name='project_list'),
     url(r'^project/star/(?P<project_type>\w+)/(?P<project_id>\d+)/$', project.project_star, name='project_star'),
     url(r'^project/unstar/(?P<project_type>\w+)/(?P<project_id>\d+)/$', project.project_unstar, name='project_unstar'),
+
+    # 项目管理平台
+    url(r'^manage/(?P<project_id>\d+)/', include('app01.menu'))
 ]
