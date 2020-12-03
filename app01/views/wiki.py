@@ -48,3 +48,9 @@ def wiki_catalog(request, project_id):
     # data = models.Wiki.objects.filter(project=request.tracer.project).values("id", 'title', 'parent_id')
     return JsonResponse({'status': True, 'data': list(data)})
 
+
+def wiki_delete(request, project_id, wiki_id):
+    models.Wiki.objects.filter(project_id=project_id, wiki_id=wiki_id).delete()
+    url = reverse('app01:wiki', kwargs={'project_id': project_id})
+    return redirect(url)
+
