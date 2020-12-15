@@ -85,9 +85,10 @@
                                 </a>
                             {% else %}
                                 <a class="btn btn-default btn-xs"
-                                   href="#">
+                                   href="{% url 'app01:file_delete' %} ">
                                     <i class="fa fa-cloud-download" aria-hidden="true"></i>
                                 </a>
+
                             {% endif %}
 
                             <a class="btn btn-danger btn-xs"
@@ -131,16 +132,33 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">×</span></button>
+                    <h4>是否要确定删除？</h4>
+                    <p style="padding-top: 20px;padding-bottom: 20px;">
+                        文件夹中包含的所有的文件都会被删除。
+                    </p>
+                    <p style="text-align: right;">
+                        <a class="btn btn-default btn-sm" data-dismiss="modal" aria-label="Close">取 消</a>
+                        <button id="btnDelete" type="button" class="btn btn-danger btn-sm">确 定</button>
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
 {% block js %}
     <script>
-
+        let FILE_DELETE_URL = "{% url 'app01:file_delete' project_id=request.tracer.project.id %}";
         $(function () {
             initAddModal();
             bindModelSubmit();
-
+            bindDeleteSubmit()
         });
 
         function initAddModal() {
@@ -160,8 +178,12 @@
                     // 新建
                     modal.find('.error-msg').empty();
                     $('#form')[0].reset();
-
                 }
+            });
+            $('#alertModal').on('show.bs.modal', function (event) {
+                let button = $(event.relatedTarget); // Button that triggered the modal
+                let fid = button.data('fid'); // Extract info from data-* attributes
+                $('#btnDelete').attr('fid', fid);
 
             })
 
@@ -182,6 +204,22 @@
                             $.each(res.error, function (key, value) {
                                 $("#id_" + key).next().text(value[0]);
                             })
+                        }
+                    }
+                })
+            })
+        }
+
+        function bindDeleteSubmit() {
+            $('#btnDelete').click(function () {
+                // 获取要删除那行ID
+                $.ajax({
+                    url: FILE_DELETE_URL,
+                    type: "GET",
+                    data: {fid: $(this).attr('fid')},
+                    success: function (res) {
+                        if (res.status) {
+                            location.reload()
                         }
                     }
                 })

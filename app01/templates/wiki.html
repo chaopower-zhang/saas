@@ -1,30 +1,33 @@
 {% extends 'layout/manage.html' %}
-
+{% load static %}
 {% block css %}
-    .panel-default {
-    margin-top: 10px;
-    }
+    <link rel="stylesheet" href="{% static 'plugin/editor.md_master/css/editormd.preview.min.css' %}">
+    <style>
+        .panel-default {
+            margin-top: 10px;
+        }
 
-    .panel-default .panel-heading {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    }
+        .panel-default .panel-heading {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
 
-    .panel-body {
-    padding: 0;
-    }
+        .panel-body {
+            padding: 0;
+        }
 
-    .title-list {
-    border-right: 1px solid #dddddd;
-    min-height: 500px;
-    }
+        .title-list {
+            border-right: 1px solid #dddddd;
+            min-height: 500px;
+        }
 
-    .content {
-    border-left: 1px solid #dddddd;
-    min-height: 600px;
-    margin-left: -1px;
-    }
+        .content {
+            border-left: 1px solid #dddddd;
+            min-height: 600px;
+            margin-left: -1px;
+        }
+    </style>
 
 
 {% endblock %}
@@ -42,7 +45,7 @@
                 </a>
                 {% if wiki_object %}
                     <a type="button" class="btn btn-primary btn-xs"
-                       href="{% url 'app01:wiki_add' project_id=request.tracer.project.id %}">
+                       href="{% url 'app01:wiki_edit' project_id=request.tracer.project.id wiki_id=wiki_object.id %}">
                         <i class="fa fa-edit" aria-hidden="true"></i> 编辑
                     </a>
                     <a type="button" class="btn btn-danger btn-xs"
@@ -59,7 +62,9 @@
             </div>
             <div class="col-sm-9 content">
                 {% if wiki_object %}
-                    {{ wiki_object.content }}
+                      <div id="previewMarkdown">
+                            <textarea>{{ wiki_object.content }}</textarea>
+                        </div>
                 {% else %}
                     <div style="text-align: center; margin-top: 50px">
                         <h4> 《{{ request.tracer.project.name }}》wiki文档库 </h4>
@@ -74,11 +79,26 @@
 {% endblock %}
 
 {% block js %}
+    <script src="{% static 'plugin/editor.md_master/editormd.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/marked.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/prettify.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/raphael.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/underscore.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/sequence-diagram.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/flowchart.min.js' %}"></script>
+    <script src="{% static 'plugin/editor.md_master/lib/jquery.flowchart.min.js' %}"></script>
     <script>
         let WIKI_DETAIL_URL = "{% url 'app01:wiki' project_id=request.tracer.project.id %}";
         $(function () {
             initCatalog();
+            initPreivewMarkdown();
         });
+
+        function initPreivewMarkdown() {
+            editormd.markdownToHTML("previewMarkdown", {
+                htmlDecode: "style,script,iframe"
+            });
+        }
 
         function initCatalog() {
             $.ajax({
@@ -88,7 +108,7 @@
                 success: function (res) {
                     if (res.status) {
                         $.each(res.data, function (index, item) {
-                            var href = WIKI_DETAIL_URL + "?wiki_id=" + item.id;
+                            let href = WIKI_DETAIL_URL + "?wiki_id=" + item.id;
                             let li = $("<li>").attr('id', "id_" + item.id).append($('<a>').text(item.title).attr('href', href)).append($('<ul>'));
                             if (!item.parent_id) {
                                 // 添加到catalog中

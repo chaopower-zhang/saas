@@ -3,6 +3,8 @@ from django.shortcuts import render, HttpResponse, redirect
 from app01.forms.project import ProjectModelForm
 from django.http import JsonResponse
 from app01 import models
+from utils.tencent.cos import create_bucket
+import time
 
 
 def project_list(request):
@@ -37,7 +39,14 @@ def project_list(request):
 
     form = ProjectModelForm(request, data=request.POST)
     if form.is_valid():
+        # 为项目添加一个桶名
+        name = form.cleaned_data['name']
+        bucket = '{}-{}-1258928143'.format(request.tracer.user.mobile_phone, str(int(time.time())))
+        region = 'ap-shanghai'
+        create_bucket(bucket, region)
         form.instance.creator = request.tracer.user
+        form.instance.bucket = bucket
+        form.instance.region = region
         form.save()
         return JsonResponse({'status': True})
     return JsonResponse({'status': False, 'error': form.errors})
