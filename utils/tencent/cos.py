@@ -18,7 +18,7 @@ def create_bucket(bucket, region="ap-shanghai"):
         Bucket=bucket,
         ACL="public-read"  # private  /  public-read / public-read-write
     )
-
+    #  跨域设置
     cors_config = {
         'CORSRule': [
             {

@@ -5,5 +5,5 @@ __pycache__
 
 *.sqlite3
 
-local_setting.py
+*/local_setting.py
 
