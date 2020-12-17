@@ -1,11 +1,12 @@
-from django.shortcuts import render,reverse
+from django.shortcuts import render, reverse
 from app01.forms.file import FolderModelForm, FileModelForm
 from app01 import models
 from django.forms import model_to_dict
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from utils.tencent.cos import delete_file_list, credential
 from django.views.decorators.csrf import csrf_exempt
 import json
+import requests
 
 
 # http://127.0.0.1:8002/manage/1/file/
@@ -75,7 +76,7 @@ def file_delete(request, project_id):
 
     # 删除数据库中的 文件 & 文件夹 （级联删除）
     delete_object = models.FileRepository.objects.filter(id=fid, project=request.tracer.project).first()
-    if delete_object.file_type == 1:
+    if delete_object and delete_object.file_type == 1:
         # 删除文件，将容量还给当前项目的已使用空间
         request.tracer.project.use_space -= delete_object.file_size
         request.tracer.project.save()
@@ -170,10 +171,9 @@ def file_post(request, project_id):
     # 把获取到的数据写入数据库即可
     form = FileModelForm(request, data=request.POST)
     if form.is_valid():
-        # 通过ModelForm.save存储到数据库中的数据返回的isntance对象，无法通过get_xx_display获取choice的中文
-        # form.instance.file_type = 1
-        # form.update_user = request.tracer.user
-        # instance = form.save() # 添加成功之后，获取到新添加的那个对象（instance.id,instance.name,instance.file_type,instace.get_file_type_display()
+        # 通过ModelForm.save存储到数据库中的数据返回的isntance对象，无法通过get_xx_display获取choice的中文 form.instance.file_type = 1
+        # form.update_user = request.tracer.user instance = form.save() # 添加成功之后，获取到新添加的那个对象（instance.id,
+        # instance.name,instance.file_type,instace.get_file_type_display()
 
         # 校验通过：数据写入到数据库
         data_dict = form.cleaned_data
@@ -191,9 +191,27 @@ def file_post(request, project_id):
             'file_size': instance.file_size,
             'username': instance.update_user.username,
             'datetime': instance.update_datetime.strftime("%Y年%m月%d日 %H:%M"),
-            'download_url': reverse('file_download', kwargs={"project_id": project_id, 'file_id': instance.id})
+            'download_url': reverse('app01:file_download', kwargs={"project_id": project_id, 'file_id': instance.id})
             # 'file_type': instance.get_file_type_display()
         }
         return JsonResponse({'status': True, 'data': result})
 
     return JsonResponse({'status': False, 'data': "文件错误"})
+
+
+def file_download(request, project_id, file_id):
+    """ 下载文件 """
+
+    file_object = models.FileRepository.objects.filter(id=file_id, project_id=project_id).first()
+    res = requests.get(file_object.file_path)
+
+    # 文件分块处理（适用于大文件）     @孙歆尧
+    data = res.iter_content()
+
+    # 设置content_type=application/octet-stream 用于提示下载框        @孙歆尧
+    response = HttpResponse(data, content_type="application/octet-stream")
+    from django.utils.encoding import escape_uri_path
+
+    # 设置响应头：中文件文件名转义      @王洋
+    response['Content-Disposition'] = "attachment; filename={};".format(escape_uri_path(file_object.name))
+    return response
